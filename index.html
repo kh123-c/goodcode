@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>اندازه‌گیری کارگاه</title>
+<meta name="theme-color" content="#2f4858">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<style>
+:root{
+  --bg:#f3f1ec; --surface:#ffffff; --ink:#1f2a33; --muted:#66727c;
+  --line:#d6d2c8; --accent:#f2b705; --accent-ink:#1f2a33; --steel:#2f4858; --danger:#b3261e;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#161c21; --surface:#1f272d; --ink:#eceae4; --muted:#9aa5ad;
+    --line:#37424b; --accent:#f2b705; --accent-ink:#1b1b1b; --steel:#8fb3c7; --danger:#ff8a80;
+    color-scheme: dark;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Vazirmatn,Tahoma,"Segoe UI",sans-serif;line-height:1.6}
+.ruler{height:22px;background:
+  repeating-linear-gradient(to left,var(--steel) 0 1px,transparent 1px 10px),
+  repeating-linear-gradient(to left,var(--steel) 0 2px,transparent 2px 50px);
+  background-size:100% 8px,100% 16px;background-repeat:repeat-x,repeat-x;background-position:bottom,bottom;
+  border-bottom:2px solid var(--steel);opacity:.8}
+main{max-width:980px;margin:0 auto;padding:16px 16px 90px}
+h1{font-size:22px;margin:12px 0 2px}
+h2{font-size:18px;margin:0 0 8px}
+.sub{color:var(--muted);margin:0 0 14px;font-size:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+label,.lbl{display:block;font-size:14px;color:var(--muted);margin:10px 0 4px}
+input[type=text],input[type=number],select,textarea{width:100%;font:inherit;font-size:17px;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:2px 10px}
+.fields .wide{grid-column:1/-1}
+.num{direction:ltr;text-align:center;font-size:22px;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{position:relative;margin:0}
+.chip input{position:absolute;opacity:0;inset:0;width:100%;height:100%;cursor:pointer;margin:0}
+.chip span{display:block;padding:9px 14px;border:1.5px solid var(--line);border-radius:999px;background:var(--bg);font-size:15px;color:var(--ink)}
+.chip input:checked + span{background:var(--steel);color:var(--bg);border-color:var(--steel);font-weight:600}
+.chip input:focus-visible + span{outline:3px solid var(--accent)}
+.sw{display:inline-block;width:12px;height:12px;border-radius:50%;margin-left:6px;vertical-align:middle;border:1px solid rgba(0,0,0,.3)}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1.5px solid var(--steel);background:transparent;color:var(--ink);padding:10px 14px}
+.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700;font-size:17px;padding:12px 18px}
+.danger{color:var(--danger);border-color:var(--danger)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.bar .grow{flex:1;min-width:160px}
+.proj{display:block;width:100%;text-align:right;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.proj b{font-size:17px}
+.meta{color:var(--muted);font-size:14px}
+.item{border-top:1px solid var(--line);padding:10px 0;display:flex;gap:10px;align-items:flex-start}
+.item:first-child{border-top:0}
+.item .txt{flex:1}
+.item img{width:110px;height:70px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px}
+.fw.err{outline:2px solid var(--danger);border-radius:8px;padding:4px;margin:2px 0}
+.calc{font-size:24px;font-weight:700;direction:ltr;text-align:center;background:var(--bg);border:2px dashed var(--accent);border-radius:8px;padding:8px}
+.dims{direction:ltr;display:inline-block;font-weight:700;color:var(--steel)}
+.empty{color:var(--muted);text-align:center;padding:14px}
+.split{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:820px){.split{grid-template-columns:1fr 1fr}}
+canvas{width:100%;height:auto;aspect-ratio:8/5;background:#fff;border:1.5px solid var(--line);border-radius:8px;touch-action:none;display:block}
+.tabs{display:flex;gap:8px;margin-bottom:8px}
+.side-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:6px}
+.side-row input{font-size:16px;padding:8px;direction:ltr;text-align:center}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--steel);color:var(--bg);padding:10px 18px;border-radius:8px;font-size:15px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+.toast.on{opacity:1}
+.warn{background:#fff3cd;color:#5c4400;border-radius:8px;padding:8px 12px;font-size:14px;margin-bottom:10px}
+#print{display:none}
+@media print{
+  body{background:#fff;color:#000}
+  #app,.ruler,.toast{display:none!important}
+  #print{display:block;direction:rtl;font-size:13px;color:#000}
+  #print h1{font-size:20px;margin:0 0 4px}
+  #print .pi{border:1px solid #999;border-radius:6px;padding:8px;margin:10px 0;break-inside:avoid}
+  #print table{width:100%;border-collapse:collapse}
+  #print td{border:1px solid #bbb;padding:3px 6px}
+  #print td:first-child{width:30%;background:#eee}
+  #print img{max-width:100%;max-height:260px;border:1px solid #bbb;margin-top:6px}
+}
+@media (prefers-reduced-motion: reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="ruler" aria-hidden="true"></div>
+<main id="app"></main>
+<div id="print"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- تنظیمات فیلدها (اینجا قابل ویرایش است) ---------- */
+const GLASS = [["شفاف","#cfe8e6"],["سوپر کلیر","#eef8f8"],["برنز","#9a6b3c"],["دودی","#4a4f54"],["ساتینا","#dfe3e6"],["مات","#e7e7e2"],["طرح‌دار","#c7d3da"],["لمینت","#b9d3c6"]];
+const FRAME = [["سفید","#f5f5f5"],["مشکی","#1a1a1a"],["شامپاین","#d9c3a0"],["طرح چوب","#a1714a"],["طلایی","#c9a24b"],["اختصاصی",null]];
+const f_glass = {k:"glass",l:"رنگ شیشه",t:"chips",o:GLASS,wide:1};
+const f_thick = {k:"thick",l:"ضخامت شیشه",t:"chips",o:["۶ میل","۸ میل","۱۰ میل","۱۲ میل"],wide:1};
+const f_frame = {k:"frame",l:"رنگ پروفیل / یراق",t:"chips",o:FRAME,wide:1};
+const f_qty = {k:"qty",l:"تعداد (چند دست از همین اندازه)",t:"num",d:1};
+const FIELDS = {
+  "بالکن": v => {
+    const n = x => parseFloat(String(x ?? "").replace(",", ".")) || 0;
+    const yn = (k,l) => ({k,l,t:"chips",o:["ندارد","دارد"],d:"ندارد",wide:1});
+    const on = k => v[k]==="دارد";
+    const mode = {k:"bmode",l:"نوع بالکن",t:"chips",o:["صاف","زاویه‌دار"],d:"صاف",wide:1};
+    if(v.bmode==="زاویه‌دار") return [mode,
+      {k:"w",l:"طول کل (cm)",t:"num"},{k:"h",l:"ارتفاع (cm)",t:"num"},
+      {k:"type",l:"نوع",t:"chips",o:["ریلی","لولایی","تاشو","ثابت"],wide:1},
+      {k:"leaves",l:"تعداد لنگه",t:"num"}, f_glass, f_frame, f_qty];
+    const aT = on("ahTop"), aB = on("ahBot"), aL = on("ahLeft"), aR = on("ahRight");
+    const fx = v.fixed || "ندارد", fL = fx==="چپ" || fx==="چپ و راست", fR = fx==="راست" || fx==="چپ و راست";
+    const wDiff = Math.abs(n(v.wb)-n(v.wt)), wBoth = n(v.wb)>0 && n(v.wt)>0;
+    const L = [mode,
+      {k:"hf",l:"ارتفاع تراز از کف (cm)",t:"num",noPdf:1},
+      {k:"hc",l:"ارتفاع تراز از سقف (cm)",t:"num",noPdf:1},
+      {k:"wb",l:"عرض پایین دهنه (cm)",t:"num",noPdf:1},
+      {k:"wt",l:"عرض بالای دهنه (cm)",t:"num",noPdf:1}];
+    if(wBoth && wDiff>5) L.push({k:"wDiffOk",l:"هشدار: اختلاف عرض پایین و بالا "+(Math.round(wDiff*10)/10)+" سانت است. اندازه‌ها را دوباره چک کردی؟",t:"chips",o:["تأیید می‌کنم، اختلاف "+(Math.round(wDiff*10)/10)+" cm"],okVal:"تأیید می‌کنم، اختلاف "+(Math.round(wDiff*10)/10)+" cm",wide:1,noPdf:1});
+    L.push(
+      {k:"h",l:"ارتفاع نهایی سفارش",t:"calc",hint:"ارتفاع از کف + ارتفاع از سقف"+((aT||aB)?" − کسر آهن‌کشی":""),
+        c:v=> (v.hf==="" || v.hf===undefined) && (v.hc==="" || v.hc===undefined) ? null : n(v.hf)+n(v.hc)-((aT||aB)?n(v.cutH):0)},
+      {k:"w",l:"عرض نهایی",t:"calc",hint:"کمترین عرض بین پایین و بالای دهنه"+((aL||aR)?" − کسر آهن‌کشی":""),
+        c:v=>{ const a=[n(v.wb),n(v.wt)].filter(x=>x>0); return a.length ? Math.min(...a)-((aL||aR)?n(v.cutW):0) : null; }},
+      {k:"fixed",l:"ثابت",t:"chips",o:["ندارد","چپ","راست","چپ و راست"],d:"ندارد",wide:1});
+    if(fL) L.push({k:"fixWL",l:"عرض ثابت چپ (cm)",t:"num"});
+    if(fR) L.push({k:"fixWR",l:"عرض ثابت راست (cm)",t:"num"});
+    L.push({k:"curColor",l:"رنگ فریم",t:"chips",o:FRAME,wide:1}, f_glass,
+      {k:"dir",l:"جهت بازشو",t:"chips",o:["راست","چپ","دو طرفه"],wide:1},
+      yn("ahTop","آهن‌کشی بالا"));
+    if(aT) L.push({k:"boxTypeTop",l:"نوع قوطی بالا",t:"text"});
+    L.push(yn("ahBot","آهن‌کشی پایین"));
+    if(aB) L.push({k:"boxTypeBot",l:"نوع قوطی پایین",t:"text"});
+    L.push(yn("ahLeft","آهن‌کشی چپ"));
+    if(aL) L.push({k:"boxTypeLeft",l:"نوع قوطی چپ",t:"text"});
+    L.push(yn("ahRight","آهن‌کشی راست"));
+    if(aR) L.push({k:"boxTypeRight",l:"نوع قوطی راست",t:"text"});
+    if(aT||aB) L.push({k:"cutH",l:"چقدر بابت آهن‌کشی (بالا/پایین) از ارتفاع کم می‌شود؟ حتماً عدد بنویس؛ اگر چیزی کم نمی‌شود ۰ بنویس (cm)",short:"مقدار کسر ارتفاع بابت آهن‌کشی",t:"num",noPdf:1});
+    if(aL||aR) L.push({k:"cutW",l:"چقدر بابت آهن‌کشی (چپ/راست) از عرض کم می‌شود؟ حتماً عدد بنویس؛ اگر چیزی کم نمی‌شود ۰ بنویس (cm)",short:"مقدار کسر عرض بابت آهن‌کشی",t:"num",noPdf:1});
+    const wFin = (()=>{ const a=[n(v.wb),n(v.wt)].filter(x=>x>0); return a.length ? Math.min(...a)-((aL||aR)?n(v.cutW):0) : 0; })();
+    const leafW = (v.leavesStd==="غیراستاندارد" && n(v.leavesN)>0 && wFin>0) ? (wFin-(fL?n(v.fixWL):0)-(fR?n(v.fixWR):0))/n(v.leavesN) : null;
+    const leafWarn = (leafW!==null && (leafW<40 || leafW>65)) ? [{k:"leafErr", l:"خطا: هر لنگه حدود "+(Math.round(leafW*10)/10)+" سانت می‌شود ("+(leafW<40?"کمتر از ۴۰":"بیشتر از ۶۵")+") و قابل قبول نیست. تعداد لنگه را اصلاح کن.", t:"note", block:1, wide:1, noPdf:1}] : [];
+    L.push({k:"leavesStd",l:"تعداد لنگه",t:"chips",o:["استاندارد","غیراستاندارد"],wide:1},
+      ...(v.leavesStd==="غیراستاندارد" ? [{k:"leavesN",l:"تعداد لنگه (عدد)",t:"num"},
+        {k:"leavesTotal",l:"تعداد لنگه کل (با ثابت)",t:"calc",u:" عدد",noPdf:1,hint:"لنگه‌ها + ثابت‌ها (هر ثابت یک لنگه)",c:v=> n(v.leavesN)>0 ? n(v.leavesN)+(fx==="چپ و راست"?2:((fx==="چپ"||fx==="راست")?1:0)) : null}] : []),
+      ...leafWarn,
+      yn("pack","جاساز / سوراخ در شیشه (جزئیات روی نقشه)"),
+      yn("kat","کتیبه"));
+    if(on("kat")) L.push(
+      {k:"katW",l:"عرض دهنه کتیبه (cm)",t:"num"},{k:"katH",l:"ارتفاع دهنه کتیبه (cm)",t:"num"},
+      {k:"katParts",l:"تعداد قسمت کتیبه",t:"num",d:1},
+      {k:"katGlass",l:"شیشه کتیبه",t:"chips",o:["ساده","مات","طرح‌دار","همرنگ شیشه اصلی"],wide:1},
+      {k:"katThick",l:"ضخامت شیشه کتیبه",t:"chips",o:["۸ میل","۱۰ میل"],wide:1},
+      {k:"katFrame",l:"نوع فریم کتیبه",t:"chips",o:["پاسادیو دو تیکه","فریم ۵ سانت","سایر"],wide:1});
+    if(on("kat") && v.katFrame==="سایر") L.push({k:"katFrameOther",l:"نوع فریم کتیبه (بنویس چه مدلی، چه جوری)",t:"text",req:1});
+    if(on("kat")) L.push({k:"katNote",l:"توضیحات کتیبه",t:"text"});
+    return L;
+  },
+  "اسلاید":[
+    {k:"w",l:"طول (cm)",t:"num"},{k:"h",l:"ارتفاع (cm)",t:"num"},
+    {k:"rails",l:"تعداد ریل",t:"chips",o:["۱","۲","۳"]},
+    {k:"leaves",l:"تعداد لنگه",t:"num"},
+    {k:"dir",l:"جهت لنگه متحرک",t:"chips",o:["راست","چپ","وسط"]},
+    {k:"screen",l:"توری",t:"chips",o:["ندارد","دارد"]}, f_thick, f_glass, f_frame, f_qty
+  ],
+  "کابین دوش":[
+    {k:"w",l:"طول (cm)",t:"num"},{k:"d",l:"عرض / عمق (cm)",t:"num"},{k:"h",l:"ارتفاع (cm)",t:"num"},
+    {k:"shape",l:"مدل",t:"chips",o:["گوشه ۹۰","ثابت + درب","کشویی","شش‌ضلعی"]},
+    {k:"dir",l:"جهت بازشو",t:"chips",o:["راست","چپ","دو طرفه"]},
+    f_thick, f_glass, f_frame, f_qty
+  ],
+  "پارتیشن":[
+    {k:"w",l:"طول (cm)",t:"num"},{k:"h",l:"ارتفاع (cm)",t:"num"},
+    {k:"panels",l:"تعداد پنل",t:"num"},
+    {k:"door",l:"درب",t:"chips",o:["ندارد","دارد"]},
+    {k:"dir",l:"جهت درب",t:"chips",o:["راست","چپ","کشویی"]},
+    f_thick, f_glass, f_frame, f_qty
+  ]
+};
+const PRODUCTS = Object.keys(FIELDS);
+const f_order = {k:"order", l:"سفارش", t:"chips", o:["عادی","سه روزه","یک روزه","ساعتی"], wide:1};
+function getFields(product, v){
+  let L = FIELDS[product]; if(typeof L === "function") L = L(v || {});
+  const out = [];
+  L.forEach(f=>{ out.push(f); if(f.k==="glass") out.push(f_order); if((f.k==="frame" || f.k==="curColor") && v && v[f.k]==="اختصاصی") out.push({k:f.k+"Custom", l:"رنگ اختصاصی (بنویس، مثلاً توصی فلان)", t:"text", req:1}); });
+  return out;
+}
+
+/* ---------- ذخیره‌سازی ---------- */
+let projects = [], storeOK = true;
+const hasWS = !!(window.storage && window.storage.get);
+async function loadAll(){
+  try{
+    if(hasWS){ const r = await window.storage.get("projects"); projects = r ? JSON.parse(r.value) : []; }
+    else projects = JSON.parse(localStorage.getItem("projects") || "[]");
+  }catch(e){ projects = []; }
+}
+async function saveAll(){
+  try{
+    if(hasWS){ const r = await window.storage.set("projects", JSON.stringify(projects)); if(!r) storeOK = false; }
+    else localStorage.setItem("projects", JSON.stringify(projects));
+  }catch(e){ storeOK = false; }
+}
+
+/* ---------- ابزار ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function toast(t){ const el=$("#toast"); el.textContent=t; el.classList.add("on"); setTimeout(()=>el.classList.remove("on"),1700); }
+const fa = () => new Date().toLocaleDateString("fa-IR");
+
+let view = "list", search = "", curP = null, curI = null, cur = null;
+
+function demoCutouts(g){
+  g.strokeStyle = "#1a1a1a"; g.lineWidth = 3;
+  g.beginPath(); g.arc(660,100,22,0,Math.PI*2); g.stroke(); g.strokeRect(220,385,36,36);
+  g.fillStyle = "#b3261e"; g.font = "bold 26px Tahoma"; g.textAlign = "center";
+  g.fillText("70",660,150); g.fillText("8 × 8",238,375);
+}
+function demoProject(){
+  const it = {product:"بالکن", sketch:null, sketchRaw:null, cutMarks:2, note:"نمونه آزمایشی",
+    v:{bmode:"صاف", hf:"100", hc:"57", wb:"345", wt:"346", h:"127", w:"345", fixed:"راست", fixWR:"42", curColor:"سفید", glass:"شفاف", order:"سه روزه", dir:"راست",
+       ahTop:"دارد", boxTypeTop:"۴۰×۳۰", boxHTop:"30", ahBot:"ندارد", leavesStd:"غیراستاندارد", leavesN:"۴", pack:"دارد", kat:"دارد", katW:"345", katH:"32", katParts:"2", katGlass:"مات", katThick:"۸ میل", katFrame:"پاسادیو دو تیکه", cutH:"30"}};
+  const mk = withAuto => {
+    const c = document.createElement("canvas"); c.width = 800; c.height = 500; const g = c.getContext("2d");
+    g.fillStyle = "#fff"; g.fillRect(0,0,800,500); demoCutouts(g);
+    if(withAuto){ const prev = cur; cur = it; drawLabels(g); cur = prev; }
+    return c.toDataURL("image/png");
+  };
+  it.sketchRaw = mk(false); it.sketch = mk(true);
+  return {id:Date.now(), name:"نمونه مشتری", place:"ورزنه", phone:"09121234567", date:fa(), items:[it]};
+}
+/* ---------- صفحه لیست پروژه‌ها ---------- */
+function renderList(){
+  const q = search.trim();
+  const shown = projects.filter(p => !q || (p.name+" "+p.place+" "+(p.phone||"")).includes(q));
+  $("#app").innerHTML = `
+    <h1>اندازه‌گیری کارگاه</h1>
+    <p class="sub">هر کار با اسم مشتری و محل ثبت می‌شود.</p>
+    ${storeOK ? "" : '<div class="warn">ذخیره‌سازی کار نکرد. اطلاعات تا بستن صفحه می‌ماند، پی‌دی‌اف بگیر.</div>'}
+    <div class="bar">
+      <input class="grow" id="q" type="text" placeholder="جستجو: اسم مشتری یا محل (مثلاً تهران‌پارس)" value="${esc(search)}">
+      <button class="primary" id="newP">پروژه جدید</button>
+      <button id="demo">نمونه آماده</button>
+    </div>
+    <div class="bar"><button id="bk">پشتیبان‌گیری</button><button id="rs">بازیابی پشتیبان</button><input type="file" id="rsf" accept="application/json,.json" hidden></div>
+    <div id="plist">${shown.length ? shown.map(p=>`
+      <button class="proj" data-id="${p.id}">
+        <b>${esc(p.name)||"بدون نام"}</b> <span class="meta">${esc(p.place)}</span>${p.phone ? ' · <span class="meta" dir="ltr">'+esc(p.phone)+'</span>' : ""}
+        <div class="meta">${p.date} · ${p.items.length} اندازه</div>
+      </button>`).join("") : '<div class="empty">پروژه‌ای پیدا نشد.</div>'}</div>`;
+  $("#q").oninput = e => { search = e.target.value; const pos=e.target.selectionStart; renderList(); const q2=$("#q"); q2.focus(); q2.setSelectionRange(pos,pos); };
+  $("#newP").onclick = async ()=>{
+    const p = {id:Date.now(), name:"", place:"", date:fa(), items:[]};
+    projects.unshift(p); curP = p; await saveAll(); go("project");
+  };
+  $("#bk").onclick = ()=>{ const b = new Blob([JSON.stringify(projects)], {type:"application/json"}); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "measure-backup.json"; document.body.appendChild(a); a.click(); a.remove(); };
+  $("#rs").onclick = ()=> $("#rsf").click();
+  $("#rsf").onchange = async e=>{ const f = e.target.files[0]; if(!f) return; try{ const arr = JSON.parse(await f.text()); if(!Array.isArray(arr)) throw 0; const ids = new Set(projects.map(p=>p.id)); arr.forEach(p=>{ if(!ids.has(p.id)) projects.push(p); }); await saveAll(); toast("بازیابی شد"); renderList(); }catch(x){ toast("فایل پشتیبان درست نیست"); } };
+  $("#demo").onclick = async ()=>{ const p = demoProject(); projects.unshift(p); curP = p; await saveAll(); go("project"); };
+  document.querySelectorAll(".proj").forEach(b=> b.onclick = ()=>{ curP = projects.find(p=>p.id==b.dataset.id); go("project"); });
+}
+
+/* ---------- صفحه پروژه ---------- */
+function summary(it){
+  const v = it.v, n = x => x ? `${esc(x)}` : "";
+  const dims = [v.w, v.d, v.h].filter(Boolean).join(" × ");
+  return `<b>${esc(caseTitle(it))}</b> <span class="dims">${dims}</span>
+    <div class="meta">${[v.type||v.shape, v.dir && ("جهت "+v.dir), v.glass && ("شیشه "+v.glass), v.order && ("سفارش "+v.order), v.thick, v.frame && ("پروفیل "+v.frame), v.qty && ("تعداد "+v.qty)].filter(Boolean).map(esc).join(" · ")}</div>
+    ${it.note ? `<div class="meta">${esc(it.note)}</div>`:""}`;
+}
+function renderProject(){
+  const p = curP;
+  $("#app").innerHTML = `
+    <div class="bar"><button id="back">برگشت به لیست</button></div>
+    <div class="card">
+      <div class="row">
+        <div><label for="pn">نام مشتری</label><input id="pn" type="text" value="${esc(p.name)}" placeholder="آقای احمدی"></div>
+        <div><label for="pp">محل کار</label><input id="pp" type="text" value="${esc(p.place)}" placeholder="تهران‌پارس"></div>
+      </div>
+      <label for="pph">شماره تماس</label>
+      <input id="pph" type="tel" inputmode="tel" dir="ltr" style="text-align:right" value="${esc(p.phone||"")}" placeholder="مثلاً 09121234567">
+    </div>
+    <div class="card">
+      <h2>اندازه‌ها (${p.items.length})</h2>
+      ${p.items.length ? p.items.map((it,i)=>`
+        <div class="item">
+          ${it.sketch ? `<img src="${it.sketch}" alt="نقشه">` : ""}
+          <div class="txt">${summary(it)}</div>
+          <div><button data-e="${i}">ویرایش</button> <button class="danger" data-d="${i}">حذف</button></div>
+        </div>`).join("") : '<div class="empty">هنوز اندازه‌ای ثبت نشده.</div>'}
+      <div class="bar" style="margin-top:12px">
+        <button class="primary" id="addI">افزودن اندازه</button>
+        <button id="pdf">خروجی پی‌دی‌اف</button>
+        <button class="danger" id="delP">حذف پروژه</button>
+      </div>
+    </div>`;
+  $("#back").onclick = ()=> go("list");
+  $("#pn").oninput = e => { p.name = e.target.value; saveAll(); };
+  $("#pp").oninput = e => { p.place = e.target.value; saveAll(); };
+  $("#pph").oninput = e => { p.phone = e.target.value; saveAll(); };
+  $("#addI").onclick = ()=>{ curI = null; cur = {product:PRODUCTS[0], v:{}, sketch:null, note:""}; go("item"); };
+  document.querySelectorAll("[data-e]").forEach(b=> b.onclick = ()=>{ curI = +b.dataset.e; cur = JSON.parse(JSON.stringify(p.items[curI])); go("item"); });
+  document.querySelectorAll("[data-d]").forEach(b=> b.onclick = async ()=>{ if(confirm("این اندازه حذف شود؟")){ p.items.splice(+b.dataset.d,1); await saveAll(); renderProject(); } });
+  $("#delP").onclick = async ()=>{ if(confirm("کل پروژه حذف شود؟")){ projects = projects.filter(x=>x!==p); await saveAll(); go("list"); } };
+  $("#pdf").onclick = makePDF;
+}
+
+/* ---------- صفحه ثبت اندازه ---------- */
+function fieldHTML(f){
+  const val = cur.v[f.k] ?? (f.d ?? "");
+  if(f.t==="note") return `<div class="warn" style="background:#fde7e5;color:#8a1c14;margin:6px 0">${f.l}</div>`;
+  if(f.t==="calc") return `<div class="wide"><div class="lbl">${f.l}</div><div class="calc" id="c_${f.k}">—</div><div class="meta">${f.hint||""}</div></div>`;
+  if(f.t==="text") return `<div class="wide"><label for="f_${f.k}">${f.l}</label><input id="f_${f.k}" type="text" data-k="${f.k}" value="${esc(val)}"></div>`;
+  if(f.t==="num") return `<div><label for="f_${f.k}">${f.l}</label><input id="f_${f.k}" class="num" type="number" inputmode="decimal" data-k="${f.k}" value="${esc(val)}" placeholder="0"></div>`;
+  if(f.t==="sel") return `<div><label for="f_${f.k}">${f.l}</label><select id="f_${f.k}" data-k="${f.k}">${f.o.map(o=>`<option ${val===o?"selected":""}>${o}</option>`).join("")}</select></div>`;
+  const first = f.o[0]; 
+  return `<div class="${f.wide?"wide":""}"><div class="lbl">${f.l}</div><div class="chips">${f.o.map(o=>{
+    const [n,c] = Array.isArray(o)?o:[o,null];
+    return `<label class="chip"><input type="radio" name="r_${f.k}" data-k="${f.k}" value="${esc(n)}" ${val===n?"checked":""}><span>${c?`<i class="sw" style="background:${c}"></i>`:""}${esc(n)}</span></label>`;
+  }).join("")}</div></div>`;
+}
+function renderFields(){
+  const box = $("#fields");
+  for(let i=0;i<2;i++) getFields(cur.product, cur.v).forEach(f=>{ if(f.d!==undefined && cur.v[f.k]===undefined) cur.v[f.k]=f.d; });
+  box.innerHTML = getFields(cur.product, cur.v).map(f=>`<div class="fw${(f.wide||f.t==="calc"||f.t==="text")?" wide":""}" data-f="${f.k}">${fieldHTML(f)}</div>`).join("");
+  box.querySelectorAll("[data-k]").forEach(el=>{
+    const k = el.dataset.k;
+    if(el.type==="radio") el.onchange = ()=>{ cur.v[k] = el.value; renderFields(); };
+    else el.oninput = ()=>{ cur.v[k] = el.value; if(k==="fixWL") delete cur.fxL; if(k==="fixWR") delete cur.fxR; updateCalcs(); };
+    if(el.tagName==="SELECT" && !cur.v[k]) cur.v[k] = el.value;
+  });
+  updateCalcs();
+  const ct = $("#caseTitle"); if(ct) ct.textContent = caseTitle(cur);
+}
+function updateCalcs(){
+  getFields(cur.product, cur.v).filter(f=>f.t==="calc").forEach(f=>{
+    const r = f.c(cur.v);
+    cur.v[f.k] = (r==null) ? "" : String(Math.round(r*10)/10);
+    const el = $("#c_"+f.k); if(el) el.textContent = (r==null) ? "—" : cur.v[f.k]+(f.u!==undefined ? f.u : " cm");
+  });
+  drawOverlay();
+}
+function validate(){
+  const miss = [];
+  getFields(cur.product, cur.v).forEach(f=>{
+    if(f.okVal!==undefined){ if(cur.v[f.k]!==f.okVal) miss.push(f); return; }
+    if(f.opt || f.t==="calc") return;
+    if(!(f.t==="chips" || f.t==="num" || f.t==="sel" || f.req)) return;
+    const val = cur.v[f.k];
+    if(val===undefined || val===null || String(val).trim()==="") miss.push(f);
+  });
+  return miss;
+}
+function renderItem(){
+  $("#app").innerHTML = `
+    <div class="bar"><button id="back">برگشت به پروژه</button></div>
+    <div class="split">
+      <div class="card">
+        <div class="lbl">محصول</div>
+        <div class="chips" id="prod">${PRODUCTS.map(n=>`<label class="chip"><input type="radio" name="prod" value="${n}" ${cur.product===n?"checked":""}><span>${n}</span></label>`).join("")}</div>
+        <div class="calc" id="caseTitle" style="font-size:18px;direction:rtl;margin-top:10px">—</div>
+        <div class="fields" id="fields" style="margin-top:6px"></div>
+        <label for="note">توضیحات</label>
+        <textarea id="note" rows="2" placeholder="مثلاً دیوار کج است…">${esc(cur.note)}</textarea>
+      </div>
+      <div class="card">
+        <h2>نقشه</h2>
+        <div class="tabs">
+          <button id="tFree">کشیدن آزاد</button>
+          <button id="tSide">ضلع به ضلع</button>
+        </div>
+        <div id="sidePanel" hidden>
+          <div class="meta" style="margin-bottom:6px">طول هر ضلع و زاویه آن با ضلع قبلی (برای ضلع اول خالی بگذار). زاویه ۹۰ یعنی گوشه راست.</div>
+          <div id="sides"></div>
+          <div class="bar"><button id="addSide">+ ضلع</button><button class="primary" id="drawSides">رسم شکل</button></div>
+        </div>
+        <div class="chips" style="margin:8px 0">
+          <label class="chip"><input type="radio" name="tool" value="pen" checked><span>قلم</span></label>
+          <label class="chip"><input type="radio" name="tool" value="text"><span>نوشتن عدد / متن</span></label>
+          <label class="chip"><input type="radio" name="tool" value="hole"><span>سوراخ ○</span></label>
+          <label class="chip"><input type="radio" name="tool" value="box"><span>جاساز □</span></label>
+          <label class="chip"><input type="radio" name="tool" value="L"><span>L راست</span></label>
+          <label class="chip"><input type="radio" name="tool" value="Lm"><span>⅃ چپ</span></label>
+          <label class="chip"><input type="radio" name="tool" value="UR"><span>⊏ راست</span></label>
+          <label class="chip"><input type="radio" name="tool" value="UL"><span>⊐ چپ</span></label>
+          <label class="chip"><input type="radio" name="tool" value="mv"><span>جابجایی خط ثابت ↔</span></label>
+          <label class="chip"><input type="checkbox" id="straight" checked><span>صاف‌کردن خط</span></label>
+        </div>
+        <div id="txtRow" class="bar" hidden><input class="grow" id="txtIn" type="text" placeholder="مثلاً ۱۰ یا مته ۷۰ (بعد روی نقشه لمس کن)"><button class="primary" id="txtOk">بگذار</button></div>
+        <div style="position:relative"><canvas id="cv" width="800" height="500"></canvas><canvas id="ov" width="800" height="500" style="position:absolute;inset:0;pointer-events:none;background:transparent;border:0"></canvas></div>
+        <div id="cutList"></div>
+        <div class="bar" style="margin-top:8px"><button id="undo">برگردان</button><button id="clr">پاک کردن نقشه</button></div>
+      </div>
+    </div>
+    <div id="errBox" class="warn" style="display:none;background:#fde7e5;color:#8a1c14;margin-top:10px"></div>
+    <button class="primary" id="saveI" style="width:100%">ثبت اندازه</button>`;
+  $("#back").onclick = ()=> go("project");
+  document.querySelectorAll('input[name="prod"]').forEach(r=> r.onchange = ()=>{ cur.product = r.value; renderFields(); });
+  $("#note").oninput = e => cur.note = e.target.value;
+  renderFields();
+  initSketch();
+  $("#saveI").onclick = async ()=>{
+    const miss = validate();
+    const flatB = cur.product==="بالکن" && cur.v.bmode!=="زاویه‌دار";
+    const cutMsgs = [];
+    const blocks = getFields(cur.product, cur.v).filter(f=>f.block);
+    if(flatB && cur.v.pack==="دارد" && (cur.cuts||[]).length + (cur.cuts ? 0 : (cur.cutMarks||0)) === 0) cutMsgs.push("جاساز را «دارد» زده‌ای ولی جایش را روی نقشه مشخص نکرده‌ای (ابزار سوراخ یا جاساز).");
+    if(flatB && cur.v.pack!=="دارد" && (cur.cuts||[]).length > 0) cutMsgs.push("روی نقشه جاساز گذاشته‌ای ولی گزینه «جاساز» را «دارد» نزده‌ای.");
+    const packBad = cutMsgs.length > 0;
+    blocks.forEach(f=>cutMsgs.push(f.l));
+    document.querySelectorAll(".fw.err").forEach(e=>e.classList.remove("err"));
+    if(miss.length || cutMsgs.length){
+      blocks.forEach(f=>{ const el = document.querySelector('.fw[data-f="'+f.k+'"]'); if(el) el.classList.add("err"); });
+      if(packBad){ const pe = document.querySelector('.fw[data-f="pack"]'); if(pe) pe.classList.add("err"); }
+      miss.forEach(f=>{ const el = document.querySelector('.fw[data-f="'+f.k+'"]'); if(el) el.classList.add("err"); });
+      const eb = $("#errBox"); eb.style.display = "block";
+      eb.textContent = (miss.length ? "این‌ها را پر یا انتخاب کن: " + miss.map(f=>f.short||f.l.replace(/\s*\(cm\)/,"").replace(/\s*اگر هیچ.*$/,"")).join("، ") + ". " : "") + cutMsgs.join(" ");
+      const first = document.querySelector(".fw.err"); if(first) first.scrollIntoView({behavior:"smooth", block:"center"});
+      return;
+    }
+    $("#errBox").style.display = "none";
+    const v = cur.v;
+    if(!v.w && !v.h && !cur.sketch && !hasInk()){ toast("حداقل یک اندازه یا نقشه بزن"); return; }
+    cur.cutMarks = cutCount;
+    cur.segs = segs.slice();
+    cur.sketchRaw = $("#cv").toDataURL("image/png");
+    const tmp = document.createElement("canvas"); tmp.width = cv.width; tmp.height = cv.height;
+    const tg = tmp.getContext("2d"); tg.drawImage(cv,0,0); drawLabels(tg);
+    cur.sketch = tmp.toDataURL("image/png");
+    if(curI===null) curP.items.push(cur); else curP.items[curI] = cur;
+    await saveAll(); toast("ثبت شد"); go("project");
+  };
+}
+
+/* ---------- بوم نقشه ---------- */
+let segs = [], cutCount = 0, dragIdx = -1, dragLine = null;
+let tool = "pen", pending = null, splitMark = 0, splitInk = false;
+let cv, ctx, strokes = [], base = null, drawing = false, sidesData = [{l:"",a:""},{l:"",a:""},{l:"",a:""}];
+function blank(){ ctx.fillStyle="#fff"; ctx.fillRect(0,0,cv.width,cv.height); }
+function initSketch(){
+  cv = $("#cv"); ctx = cv.getContext("2d"); tool = "pen"; pending = null; drawOverlay();
+  ctx.lineCap="round"; ctx.lineJoin="round";
+  strokes = []; base = null; segs = (cur.segs || []).slice(); cutCount = cur.cutMarks || 0; dragIdx = -1; blank(); renderCutList();
+  const src0 = cur.sketchRaw || cur.sketch;
+  if(src0){ const img = new Image(); img.onload = ()=>{ ctx.drawImage(img,0,0,cv.width,cv.height); base = ctx.getImageData(0,0,cv.width,cv.height); inkFlag=true; }; img.src = src0; }
+  inkFlag = !!src0;
+  const pos = e => { const r=cv.getBoundingClientRect(); return {x:(e.clientX-r.left)*cv.width/r.width, y:(e.clientY-r.top)*cv.height/r.height}; };
+  cv.onpointerdown = e => { e.preventDefault(); const p=pos(e); const hi = hitCut(p); if(hi>=0){ dragIdx = hi; cv.setPointerCapture(e.pointerId); return; } if(tool==="mv"){ const hf = hitFixLine(p); if(hf){ dragLine = hf; cv.setPointerCapture(e.pointerId); } else toast("نزدیک خط ثابت را لمس کن و بکش"); return; } if(tool!=="pen"){ placeTool(p); if(dragIdx>=0) cv.setPointerCapture(e.pointerId); return; } cv.setPointerCapture(e.pointerId); drawing=true; strokes.push({pts:[p], snap:ctx.getImageData(0,0,cv.width,cv.height), sl:segs.length}); ctx.strokeStyle="#1a1a1a"; ctx.lineWidth = e.pointerType==="pen" ? 2+e.pressure*3 : 3; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x+.1,p.y+.1); ctx.stroke(); inkFlag=true; };
+  cv.onpointermove = e => { if(dragLine){ moveFix(dragLine, pos(e).x); drawOverlay(); return; } if(dragIdx>=0){ const q=pos(e); cur.cuts[dragIdx].x=q.x; cur.cuts[dragIdx].y=q.y; constrainCut(cur.cuts[dragIdx]); drawOverlay(); return; } if(!drawing) return; const p=pos(e); strokes[strokes.length-1].pts.push(p); ctx.lineTo(p.x,p.y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(p.x,p.y); };
+  cv.onpointerup = cv.onpointercancel = ()=>{ if(dragLine){ dragLine = null; return; } if(dragIdx>=0){ dragIdx = -1; return; } if(drawing){ drawing=false; straightenLast(); } };
+  $("#undo").onclick = ()=>{ const s = strokes.pop(); if(s){ ctx.putImageData(s.snap,0,0); if(s.sl!==undefined) segs.length = s.sl; if(s.kind==="cut") cutCount = Math.max(0, cutCount-1); } else toast("چیزی برای برگردان نیست"); };
+  $("#clr").onclick = ()=>{ if(confirm("نقشه پاک شود؟")){ blank(); strokes=[]; segs=[]; cutCount=0; inkFlag=false; cur.sketch=null; cur.sketchRaw=null; cur.split=false; if(katOn()) syncKatSketch(); } };
+  $("#tFree").onclick = ()=> $("#sidePanel").hidden = true;
+  $("#tSide").onclick = ()=>{ $("#sidePanel").hidden = false; renderSides(); };
+  $("#addSide").onclick = ()=>{ sidesData.push({l:"",a:""}); renderSides(); };
+  $("#drawSides").onclick = drawSides;
+  document.querySelectorAll('input[name="tool"]').forEach(r=> r.onchange = ()=>{ tool = r.value; if(tool!=="text"){ $("#txtRow").hidden = true; pending = null; } else { $("#txtRow").hidden = false; $("#txtIn").focus(); } });
+  $("#txtOk").onclick = placeText;
+  $("#txtIn").onkeydown = e => { if(e.key==="Enter"){ e.preventDefault(); placeText(); } };
+}
+let inkFlag = false;
+function pickCoord(axis, pts){
+  const R = 30; let best = null, bd = R;
+  pts.forEach(P=>{ allSegs().forEach(sg=>{ [[sg.x1,sg.y1],[sg.x2,sg.y2]].forEach(q=>{ const d = Math.hypot(P.x-q[0], P.y-q[1]); if(d < bd){ bd = d; best = (axis==="y") ? q[1] : q[0]; } }); }); });
+  if(best !== null) return best;
+  const avg = (axis==="y") ? (pts[0].y+pts[1].y)/2 : (pts[0].x+pts[1].x)/2;
+  bd = R;
+  allSegs().forEach(sg=>{
+    if(axis==="y" && Math.abs(sg.y1-sg.y2) < 1){ const d = Math.abs(sg.y1-avg); if(d < bd){ bd = d; best = sg.y1; } }
+    if(axis==="x" && Math.abs(sg.x1-sg.x2) < 1){ const d = Math.abs(sg.x1-avg); if(d < bd){ bd = d; best = sg.x1; } }
+  });
+  return best !== null ? best : avg;
+}
+function straightGeom(pts, W, H){
+  if(!pts || pts.length < 4) return null;
+  const a = pts[0], b = pts[pts.length-1], dx = b.x-a.x, dy = b.y-a.y, L = Math.hypot(dx,dy);
+  if(L < 50) return null;
+  let dev = 0; pts.forEach(p=>{ dev = Math.max(dev, Math.abs((p.x-a.x)*dy-(p.y-a.y)*dx)/L); });
+  if(dev > Math.max(18, 0.1*L)) return null;
+  const ang = Math.abs(Math.atan2(dy,dx))*180/Math.PI, tol = 15;
+  const isH = ang < tol || ang > 180-tol, isV = Math.abs(ang-90) < tol;
+  const A0 = {x:a.x, y:a.y}, B0 = {x:b.x, y:b.y};
+  if(isH){ const Y = pickCoord("y",[a,b]); A0.y = B0.y = Y; }
+  else if(isV){ const X = pickCoord("x",[a,b]); A0.x = B0.x = X; }
+  let A = snapPt(A0, A0, B0), B = snapPt(B0, A0, B0);
+  if(isH){ A.y = B.y = A0.y; } else if(isV){ A.x = B.x = A0.x; }
+  const cl = p => ({x:Math.max(0,Math.min(W,p.x)), y:Math.max(0,Math.min(H,p.y))});
+  A = cl(A); B = cl(B);
+  if(Math.hypot(B.x-A.x, B.y-A.y) < 8) return null;
+  return {A, B};
+}
+function straightenLast(){
+  const sw = $("#straight"); if(!sw || !sw.checked) return;
+  const st = strokes[strokes.length-1]; if(!st || !st.pts) return;
+  const r = straightGeom(st.pts, cv.width, cv.height); if(!r) return;
+  ctx.putImageData(st.snap,0,0);
+  ctx.strokeStyle = "#1a1a1a"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(r.A.x,r.A.y); ctx.lineTo(r.B.x,r.B.y); ctx.stroke();
+  segs.push({x1:r.A.x,y1:r.A.y,x2:r.B.x,y2:r.B.y});
+}
+function snapPt(P, a, b){
+  const R = 30; let best = null, bd = R;
+  allSegs().forEach(sg=>{ [[sg.x1,sg.y1],[sg.x2,sg.y2]].forEach(q=>{ const d = Math.hypot(P.x-q[0], P.y-q[1]); if(d < bd){ bd = d; best = {x:q[0], y:q[1]}; } }); });
+  if(best) return best;
+  bd = R*1.5;
+  allSegs().forEach(sg=>{
+    const sx = sg.x2-sg.x1, sy = sg.y2-sg.y1, dx = b.x-a.x, dy = b.y-a.y, den = dx*sy - dy*sx;
+    let c = null;
+    if(Math.abs(den) > 1e-6){
+      const t = ((sg.x1-a.x)*sy - (sg.y1-a.y)*sx)/den, u = ((sg.x1-a.x)*dy - (sg.y1-a.y)*dx)/den;
+      if(u >= -0.02 && u <= 1.02) c = {x:a.x+t*dx, y:a.y+t*dy};
+    }
+    if(!c){ const L2 = sx*sx+sy*sy || 1; let u = ((P.x-sg.x1)*sx + (P.y-sg.y1)*sy)/L2; u = Math.max(0, Math.min(1,u)); c = {x:sg.x1+u*sx, y:sg.y1+u*sy}; }
+    const d = Math.hypot(P.x-c.x, P.y-c.y); if(d < bd){ bd = d; best = c; }
+  });
+  return best || P;
+}
+function autoGeom(){
+  const out = {lines:[], strip:null, fixL:null, fixR:null};
+  if(!cur) return out;
+  const v = cur.v, p = cur.product, n = x => parseFloat(String(x ?? "").replace(",", ".")) || 0;
+  const X = 60, Y = 50, W = 680, H = 400;
+  const L = (x1,y1,x2,y2,t)=> out.lines.push({x1,y1,x2,y2,t});
+  const frame = ()=>{ L(X,Y,X+W,Y); L(X+W,Y,X+W,Y+H); L(X+W,Y+H,X,Y+H); L(X,Y+H,X,Y); };
+  const clamp = (a,lo,hi)=> Math.max(lo, Math.min(hi, a));
+  if(p==="بالکن"){
+    if(v.bmode==="زاویه‌دار") return out;
+    frame();
+    const totW = Math.max(n(v.wb), n(v.wt), n(v.w));
+    const totH = (n(v.hf)+n(v.hc)) || n(v.h);
+    let yMain = Y+H;
+    if(v.kat==="دارد"){
+      const f = clamp((totH>0 && n(v.katH)>0) ? n(v.katH)/totH : 0.25, 0.12, 0.4);
+      const yy = Y + H*(1-f); L(X,yy,X+W,yy); out.strip = {y0:yy, y1:Y+H}; yMain = yy;
+      const kp = parseInt(v.katParts) || 1;
+      for(let i=1;i<kp;i++) L(X+W*i/kp, yy, X+W*i/kp, Y+H);
+    }
+    const fx = v.fixed || "ندارد";
+    const frac = w => clamp((totW>0 && n(w)>0) ? n(w)/totW : 0.15, 0.06, 0.35);
+    let xl = X, xr = X+W;
+    if(fx==="چپ" || fx==="چپ و راست"){ xl = (cur.fxL!==undefined ? cur.fxL : X + W*frac(v.fixWL)); L(xl,Y,xl,yMain); out.fixL = {x0:X, x1:xl}; }
+    if(fx==="راست" || fx==="چپ و راست"){ xr = (cur.fxR!==undefined ? cur.fxR : X+W - W*frac(v.fixWR)); L(xr,Y,xr,yMain); out.fixR = {x0:xr, x1:X+W}; }
+    const tt = (sz,tot,len)=> clamp((tot>0 && n(sz)>0) ? len*n(sz)/tot : 14, 10, 60);
+    if(v.ahTop==="دارد"){ const t = tt(v.boxHTop, totH, H); L(X,Y+t,X+W,Y+t,"thin"); }
+    if(v.ahBot==="دارد"){ const t = tt(v.boxHBot, totH, H); L(X,yMain-t,X+W,yMain-t,"thin"); }
+    if(v.ahLeft==="دارد"){ const t = tt(v.boxWLeft, totW, W); L(X+t,Y,X+t,yMain,"thin"); }
+    if(v.ahRight==="دارد"){ const t = tt(v.boxWRight, totW, W); L(X+W-t,Y,X+W-t,yMain,"thin"); }
+    const ln = v.leavesStd==="غیراستاندارد" ? (parseInt(v.leavesN) || 0) : 0;
+    for(let i=1;i<ln;i++){ const x = xl + (xr-xl)*i/ln; L(x,Y,x,yMain,"thin"); }
+  } else if(p==="اسلاید"){
+    frame(); const ln = parseInt(v.leaves) || 0;
+    for(let i=1;i<ln;i++) L(X+W*i/ln, Y, X+W*i/ln, Y+H, "thin");
+  } else if(p==="پارتیشن"){
+    frame(); const pn = parseInt(v.panels) || 0;
+    for(let i=1;i<pn;i++) L(X+W*i/pn, Y, X+W*i/pn, Y+H);
+  } else if(p==="کابین دوش"){
+    frame();
+    if(v.shape==="ثابت + درب") L(X+W*0.6, Y, X+W*0.6, Y+H);
+    else if(v.shape==="کشویی") L(X+W*0.5, Y, X+W*0.5, Y+H, "thin");
+  }
+  return out;
+}
+function allSegs(){ return segs.concat(autoGeom().lines.filter(l=>!l.t)); }
+function drawAuto(g){
+  const G = autoGeom(); if(!G.lines.length) return;
+  g.save(); g.lineCap = "round";
+  G.lines.forEach(l=>{ if(l.t==="thin") return;
+    g.beginPath(); g.moveTo(l.x1,l.y1); g.lineTo(l.x2,l.y2);
+    if(l.t==="thin"){ g.strokeStyle = "#6b7780"; g.lineWidth = 2; g.setLineDash([8,6]); } else { g.strokeStyle = "#1a1a1a"; g.lineWidth = 3; g.setLineDash([]); }
+    g.stroke();
+  });
+  g.setLineDash([]);
+  g.restore();
+}
+function drawLabels(g){
+  drawAuto(g); drawCuts(g);
+  const v = cur.v, G = autoGeom();
+  g.save(); g.fillStyle = "#b3261e"; g.font = "bold 30px "+FONT; g.textAlign = "center"; g.direction = "ltr";
+  const vert = (t,x,y)=>{ g.save(); g.translate(x,y); g.rotate(-Math.PI/2); g.fillText(t,0,0); g.restore(); };
+  if(v.w) g.fillText(v.w, 400, 38);
+  if(v.h) vert(v.h, 32, 250);
+  if(cur.product==="بالکن" && v.bmode!=="زاویه‌دار"){
+    const fN = v.fixed==="چپ و راست" ? 2 : ((v.fixed==="چپ" || v.fixed==="راست") ? 1 : 0);
+    let lt = "";
+    if(v.leavesStd==="غیراستاندارد" && +v.leavesN>0) lt = "تعداد لنگه کل: "+(+v.leavesN+fN)+(fN ? " (با ثابت‌ها)" : "");
+    else if(v.leavesStd==="استاندارد") lt = "لنگه: استاندارد"+(fN ? " + "+fN+" ثابت" : "");
+    if(lt){ g.save(); g.font = "bold 18px "+FONT; g.direction = "rtl"; g.textAlign = "left"; g.fillText(lt, 60, 22); g.restore(); }
+  }
+  if(G.strip){ g.save(); g.font = "bold 22px "+FONT; g.direction = "rtl"; g.fillText("کتیبه: "+(v.katW||"؟")+" × "+(v.katH||"؟")+(v.katFrame ? " – "+(v.katFrame==="سایر" ? (v.katFrameOther||"سایر") : v.katFrame) : ""), 400, (G.strip.y0+G.strip.y1)/2+8); g.restore(); }
+  if(G.fixL && v.fixWL) g.fillText(v.fixWL, (G.fixL.x0+G.fixL.x1)/2, 95);
+  if(G.fixR && v.fixWR) g.fillText(v.fixWR, (G.fixR.x0+G.fixR.x1)/2, 95);
+  g.restore();
+}
+function drawOverlay(){
+  const o = $("#ov"); if(!o) return;
+  const g = o.getContext("2d"); g.clearRect(0,0,o.width,o.height); drawLabels(g);
+}
+function katOn(){ return cur.product==="بالکن" && cur.v.bmode!=="زاویه‌دار" && cur.v.kat==="دارد"; }
+function syncKatSketch(){ drawOverlay(); }
+function placeTool(p){
+  if(tool==="text"){ pending = p; $("#txtRow").hidden = false; const t = $("#txtIn"); if(t.value.trim()) placeText(); else { t.focus(); toast("اول متن را بنویس"); } return; }
+  cur.cuts = cur.cuts || [];
+  cur.cuts.push({t: (tool==="hole" || tool==="L" || tool==="Lm" || tool==="UR" || tool==="UL") ? tool : "box", x:p.x, y:p.y, note:""});
+  constrainCut(cur.cuts[cur.cuts.length-1]);
+  dragIdx = cur.cuts.length-1;
+  renderCutList(); drawOverlay();
+}
+function constrainCut(c){
+  const EX = {L:716, Lm:84, UR:718, UL:82};
+  if(EX[c.t] !== undefined){ c.x = EX[c.t]; c.y = Math.max(80, Math.min(420, c.y)); }
+}
+function hitFixLine(p){
+  const G = autoGeom(), yEnd = G.strip ? G.strip.y0 : 450;
+  if(p.y < 40 || p.y > yEnd+10) return null;
+  if(G.fixL && Math.abs(p.x-G.fixL.x1) < 28) return "L";
+  if(G.fixR && Math.abs(p.x-G.fixR.x0) < 28) return "R";
+  return null;
+}
+function moveFix(side, x){
+  const G = autoGeom();
+  if(side==="L"){ const hi = (G.fixR ? G.fixR.x0 : 740) - 50; cur.fxL = Math.max(90, Math.min(hi, x)); }
+  else { const lo = (G.fixL ? G.fixL.x1 : 60) + 50; cur.fxR = Math.max(lo, Math.min(710, x)); }
+}
+function hitCut(p){
+  const L = cur.cuts || [];
+  for(let i=L.length-1;i>=0;i--){ if(Math.hypot(p.x-L[i].x, p.y-L[i].y) < 32) return i; }
+  return -1;
+}
+function cutPath(g, c){
+  g.beginPath();
+  if(c.t==="hole") g.arc(c.x, c.y, 22, 0, Math.PI*2);
+  else if(c.t==="L"){ g.moveTo(c.x-18, c.y-24); g.lineTo(c.x-18, c.y+22); g.lineTo(c.x+24, c.y+22); }
+  else if(c.t==="UR"){ g.moveTo(c.x+22, c.y-20); g.lineTo(c.x-22, c.y-20); g.lineTo(c.x-22, c.y+20); g.lineTo(c.x+22, c.y+20); }
+  else if(c.t==="UL"){ g.moveTo(c.x-22, c.y-20); g.lineTo(c.x+22, c.y-20); g.lineTo(c.x+22, c.y+20); g.lineTo(c.x-22, c.y+20); }
+  else if(c.t==="Lm"){ g.moveTo(c.x+18, c.y-24); g.lineTo(c.x+18, c.y+22); g.lineTo(c.x-24, c.y+22); }
+  else g.rect(c.x-20, c.y-20, 40, 40);
+}
+function drawCuts(g){
+  const L = cur.cuts || []; if(!L.length) return;
+  g.save(); g.strokeStyle = "#1a1a1a"; g.lineWidth = 3; g.lineJoin = "miter";
+  L.forEach((c,i)=>{
+    constrainCut(c); cutPath(g, c); g.stroke();
+    g.fillStyle = "#b3261e"; g.direction = "rtl"; g.textAlign = "center"; g.font = "bold 22px "+FONT;
+    const lsh = (c.t==="L" || c.t==="Lm");
+    g.fillText(String(i+1), c.x + (c.t==="L" ? 6 : c.t==="Lm" ? -6 : 0), c.y + (lsh ? 0 : 8));
+  });
+  g.fillStyle = "#b3261e"; g.textAlign = "center"; g.direction = "rtl";
+  const head = "جاساز دارد:", entries = L.map((c,i)=> (i+1)+") "+(c.note||"جای آن روی نقشه"));
+  let lines = [];
+  for(const size of [17, 14]){
+    g.font = size+"px "+FONT; lines = []; let curL = head;
+    entries.forEach(e=>{ const t = curL+"   "+e; if(curL===head || g.measureText(t).width <= 720) curL = t; else { lines.push(curL); curL = e; } });
+    lines.push(curL);
+    if(lines.length <= 3) break;
+  }
+  const fit = t => { let t2 = t; while(g.measureText(t2).width > 720 && t2.length > 4) t2 = t2.slice(0,-2); return t2 === t ? t : t2+"…"; };
+  const fs = parseInt(g.font) || 17;
+  lines.slice(0,3).forEach((ln,k)=> g.fillText(fit(ln), 400, 462 + k*(fs===14 ? 15 : 17)));
+  g.restore();
+}
+function renderCutList(){
+  const box = $("#cutList"); if(!box) return;
+  const L = cur.cuts || [];
+  box.innerHTML = L.length ? '<div class="lbl">جاسازها (روی شکل انگشت را نگه دار و بکش تا جابجا شود)</div>' + L.map((c,i)=>`<div class="side-row" style="grid-template-columns:auto 1fr auto"><b>${i+1} ${({hole:"○",box:"□",L:"L",Lm:"⅃",UR:"⊏",UL:"⊐"})[c.t]||""}</b><input type="text" data-ci="${i}" value="${esc(c.note)}" placeholder="مثلاً از بالا ۲۰، از بغل ۱۰، مته ۷۰" style="direction:rtl;text-align:right"><button class="danger" data-cd="${i}">حذف</button></div>`).join("") : "";
+  box.querySelectorAll("[data-ci]").forEach(el=> el.oninput = ()=>{ cur.cuts[+el.dataset.ci].note = el.value; drawOverlay(); });
+  box.querySelectorAll("[data-cd]").forEach(b=> b.onclick = ()=>{ cur.cuts.splice(+b.dataset.cd,1); renderCutList(); drawOverlay(); });
+}
+function placeText(){
+  const t = $("#txtIn").value.trim();
+  if(!t) return;
+  if(!pending){ toast("حالا روی نقشه جای نوشته را لمس کن"); return; }
+  strokes.push({snap:ctx.getImageData(0,0,cv.width,cv.height), sl:segs.length});
+  ctx.save(); ctx.fillStyle = "#b3261e"; ctx.font = "bold 30px "+FONT; ctx.textAlign = "center"; ctx.direction = "rtl";
+  ctx.fillText(t, pending.x, pending.y); ctx.restore();
+  inkFlag = true; $("#txtIn").value = ""; pending = null;
+}
+function hasInk(){ return inkFlag; }
+function renderSides(){
+  $("#sides").innerHTML = sidesData.map((s,i)=>`<div class="side-row">
+    <input type="number" inputmode="decimal" placeholder="طول ${i+1}" data-i="${i}" data-f="l" value="${esc(s.l)}">
+    <input type="number" inputmode="decimal" placeholder="${i? "زاویه":"—"}" data-i="${i}" data-f="a" value="${esc(s.a)}" ${i?"":"disabled"}>
+    <button data-x="${i}" class="danger">×</button></div>`).join("");
+  $("#sides").querySelectorAll("input").forEach(el=> el.oninput = ()=>{ sidesData[+el.dataset.i][el.dataset.f] = el.value; });
+  $("#sides").querySelectorAll("[data-x]").forEach(b=> b.onclick = ()=>{ sidesData.splice(+b.dataset.x,1); renderSides(); });
+}
+function drawSides(){
+  const S = sidesData.filter(s=>+s.l>0);
+  if(S.length<1){ toast("طول ضلع‌ها را وارد کن"); return; }
+  let x=0,y=0,h=0; const pts=[{x,y}];
+  S.forEach((s,i)=>{
+    if(i>0){ const interior = (+s.a||90); h -= (180-interior)*Math.PI/180; }
+    x += Math.cos(h)*(+s.l); y += Math.sin(h)*(+s.l); pts.push({x,y});
+  });
+  const xs=pts.map(p=>p.x), ys=pts.map(p=>p.y);
+  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+  const m=70, sc=Math.min((cv.width-2*m)/Math.max(maxX-minX,1),(cv.height-2*m)/Math.max(maxY-minY,1));
+  const tx=p=>({x:m+(p.x-minX)*sc+((cv.width-2*m)-(maxX-minX)*sc)/2, y:m+(p.y-minY)*sc+((cv.height-2*m)-(maxY-minY)*sc)/2});
+  strokes=[]; segs=[]; blank();
+  ctx.strokeStyle="#2f4858"; ctx.lineWidth=4; ctx.beginPath();
+  pts.forEach((p,i)=>{ const t=tx(p); i?ctx.lineTo(t.x,t.y):ctx.moveTo(t.x,t.y); }); ctx.stroke();
+  ctx.fillStyle="#b3261e"; ctx.font="bold 22px Tahoma,sans-serif"; ctx.textAlign="center";
+  S.forEach((s,i)=>{ const a=tx(pts[i]), b=tx(pts[i+1]); ctx.fillText(s.l, (a.x+b.x)/2, (a.y+b.y)/2-10); segs.push({x1:a.x,y1:a.y,x2:b.x,y2:b.y}); });
+  inkFlag=true; toast("شکل کشیده شد، می‌توانی رویش بنویسی");
+}
+
+/* ---------- خروجی PDF (برگه A4 شبیه برگه دستی) ---------- */
+const FONT = 'Vazirmatn,Tahoma,"Segoe UI",sans-serif';
+function caseTitle(it){
+  const v = it.v;
+  if(it.product !== "بالکن") return it.product + (v.shape ? " – "+v.shape : "");
+  if(v.bmode === "زاویه‌دار") return "بالکنی زاویه‌دار";
+  const p = ["بالکنی صاف"];
+  const sides = [["ahTop","بالا"],["ahBot","پایین"],["ahLeft","چپ"],["ahRight","راست"]].filter(x=>v[x[0]]==="دارد").map(x=>x[1]);
+  p.push(sides.length ? "آهن‌کشی "+sides.join(" و ") : "بدون آهن‌کشی");
+  if(v.fixed && v.fixed!=="ندارد") p.push("ثابت "+v.fixed);
+  if(v.kat==="دارد") p.push("کتیبه‌دار");
+  if(v.pack==="دارد") p.push("جاساز‌دار");
+  return p.join(" – ");
+}
+function pdfLines(it){
+  const v = it.v, L = [];
+  const add = (l,x)=>{ if(x!==undefined && x!==null && x!=="") L.push(l+": "+x); };
+  if(it.product==="بالکن" && v.bmode!=="زاویه‌دار"){
+    add("ارتفاع دهنه", v.h && v.h+" cm");
+    add("عرض دهنه", v.w && v.w+" cm");
+    const fx = v.fixed || "ندارد";
+    if(fx==="چپ" || fx==="چپ و راست") add("ثابت چپ", [v.fixWL && v.fixWL+" cm"].filter(Boolean).join(" "));
+    if(fx==="راست" || fx==="چپ و راست") add("ثابت راست", [v.fixWR && v.fixWR+" cm"].filter(Boolean).join(" "));
+    add("رنگ فریم", v.curColor==="اختصاصی" ? ("اختصاصی"+(v.curColorCustom?" – "+v.curColorCustom:"")) : v.curColor);
+    add("شیشه", [v.glass, v.thick].filter(Boolean).join(" "));
+    add("سفارش", v.order);
+    add("جهت بازشو", v.dir);
+    [["ahTop","boxTypeTop","بالا"],["ahBot","boxTypeBot","پایین"],["ahLeft","boxTypeLeft","چپ"],["ahRight","boxTypeRight","راست"]].forEach(a=>{
+      if(v[a[0]]==="دارد") add("آهن‌کشی "+a[2], ["دارد", v[a[1]] && ("قوطی "+v[a[1]])].filter(Boolean).join(" ، "));
+    });
+    if(v.ahTop==="دارد" || v.ahBot==="دارد"){ if(+v.cutH>0) L.push(v.cutH+" سانت بابت آهن‌کشی از ارتفاع کم شده است"); else if(v.cutH!==undefined && v.cutH!=="") L.push("نیازی به کم کردن بابت آهن‌کشی از ارتفاع نیست"); }
+    if(v.ahLeft==="دارد" || v.ahRight==="دارد"){ if(+v.cutW>0) L.push(v.cutW+" سانت بابت آهن‌کشی از عرض کم شده است"); else if(v.cutW!==undefined && v.cutW!=="") L.push("نیازی به کم کردن بابت آهن‌کشی از عرض نیست"); }
+    const fxN = fx==="چپ و راست" ? 2 : ((fx==="چپ" || fx==="راست") ? 1 : 0);
+    if(v.leavesStd==="غیراستاندارد" && +v.leavesN>0) add("تعداد لنگه کل", (+v.leavesN+fxN) + (fxN ? " ("+v.leavesN+" بازشو + "+fxN+" ثابت)" : ""));
+    else if(v.leavesStd==="استاندارد") add("تعداد لنگه", "استاندارد");
+    else add("تعداد لنگه", v.leaves);
+    if(v.pack==="دارد"){ add("جاساز", "دارد"); (it.cuts || []).forEach((c,i)=> add("جاساز "+(i+1)+" ("+({hole:"سوراخ", box:"جاساز", L:"جاساز L راست", Lm:"جاساز L چپ", UR:"جاساز U راست", UL:"جاساز U چپ"}[c.t]||"جاساز")+")", c.note || "جای آن روی نقشه")); }
+    if(v.kat==="دارد"){
+      add("ابعاد کتیبه", (v.katW||"؟")+" × "+(v.katH||"؟")+" cm"+(+v.katParts>1 ? " ، "+v.katParts+" قسمت" : ""));
+      add("شیشه کتیبه", [v.katGlass, v.katThick].filter(Boolean).join(" "));
+      add("نوع فریم کتیبه", v.katFrame==="سایر" ? (v.katFrameOther||"سایر") : v.katFrame);
+      add("توضیحات کتیبه", v.katNote);
+    }
+    if(v.qty && +v.qty>1) add("تعداد", v.qty);
+  } else {
+    getFields(it.product, v).filter(f=>!f.noPdf).forEach(f=>{ if(f.k==="bmode" && v.bmode!=="زاویه‌دار") return; add(f.l, v[f.k]); });
+  }
+  add("توضیحات", it.note);
+  return L;
+}
+function wrapText(g, text, maxW){
+  const words = text.split(" "), out = []; let cur = "";
+  words.forEach(w=>{ const t = cur ? cur+" "+w : w; if(g.measureText(t).width > maxW && cur){ out.push(cur); cur = w; } else cur = t; });
+  if(cur) out.push(cur); return out;
+}
+function prepItemLayout(it, meas){
+  const raw = pdfLines(it);
+  let last = null;
+  for(const fs of [27,24,21,18]){
+    meas.font = fs+"px "+FONT;
+    const lh = Math.round(fs*40/27), gap = Math.round(fs*6/27);
+    const lines = raw.map(t=>wrapText(meas, t, 470));
+    const hh = 140 + lines.reduce((a,l)=>a+l.length*lh+gap, 0) + 15;
+    last = {fs, lh, gap, lines, h: hh<=735 ? 735 : 1499};
+    if(hh <= 1499) return last;
+  }
+  return last;
+}
+function planPages(needs){
+  const pages = []; let pg = null;
+  needs.forEach((h,i)=>{
+    if(!pg || pg.y + h > 1700){ pg = {blocks:[], y:195}; pages.push(pg); }
+    pg.blocks.push({i, top:pg.y, h}); pg.y += h + 30;
+  });
+  return pages.length ? pages : [{blocks:[], y:195}];
+}
+async function makePages(){
+  const p = curP, W = 1240, H = 1754, pages = [];
+  const imgs = await Promise.all(p.items.map(it=> new Promise(res=>{ if(!it.sketch) return res(null); const im = new Image(); im.onload=()=>res(im); im.onerror=()=>res(null); im.src = it.sketch; })));
+  const meas = document.createElement("canvas").getContext("2d"); meas.direction = "rtl";
+  const prep = p.items.map(it=> prepItemLayout(it, meas));
+  const plan = planPages(prep.map(x=>x.h));
+  plan.forEach((pl,pg)=>{
+    const c = document.createElement("canvas"); c.width = W; c.height = H;
+    const g = c.getContext("2d");
+    g.fillStyle = "#fff"; g.fillRect(0,0,W,H);
+    g.fillStyle = "#111"; g.direction = "rtl"; g.textAlign = "right";
+    g.font = "bold 42px "+FONT; g.fillText("برگه اندازه‌گیری", W-60, 90);
+    g.font = "28px "+FONT; g.fillText("مشتری: "+(p.name||"-")+"      محل: "+(p.place||"-")+(p.phone ? "      تلفن: "+p.phone : "")+"      تاریخ: "+p.date, W-60, 145);
+    g.strokeStyle = "#111"; g.lineWidth = 3; g.beginPath(); g.moveTo(60,170); g.lineTo(W-60,170); g.stroke();
+    pl.blocks.forEach(b=>{
+      const it = p.items[b.i], pr = prep[b.i], top = b.top, bh = b.h;
+      g.strokeStyle = "#777"; g.lineWidth = 2; g.strokeRect(60, top, W-120, bh);
+      g.fillStyle = "#f1efe8"; g.fillRect(75, top+15, W-150, 62); g.strokeStyle = "#111"; g.lineWidth = 2; g.strokeRect(75, top+15, W-150, 62);
+      g.fillStyle = "#111"; g.font = "bold 32px "+FONT; g.textAlign = "center"; g.fillText((b.i+1)+". "+caseTitle(it), W/2, top+58); g.textAlign = "right";
+      const im = imgs[b.i];
+      if(im){ const bw = 560, bhh = Math.min(bw*im.height/im.width, bh-120); g.drawImage(im, 85, top+100, bw, bhh); g.strokeStyle = "#999"; g.strokeRect(85, top+100, bw, bhh); }
+      g.font = pr.fs+"px "+FONT; let y = top + 140;
+      pr.lines.forEach(wl=>{ wl.forEach(ln=>{ if(y < top+bh-8){ g.fillText(ln, W-85, y); y += pr.lh; } }); y += pr.gap; });
+    });
+    g.textAlign = "center"; g.font = "22px "+FONT; g.fillStyle = "#555"; g.fillText("صفحه "+(pg+1)+" از "+plan.length, W/2, H-30);
+    pages.push(c);
+  });
+  return pages;
+}
+
+function buildPDF(jpgs, w, h){
+  const enc = new TextEncoder(), chunks = [], offs = []; let pos = 0;
+  const put = d => { const u = (typeof d === "string") ? enc.encode(d) : d; chunks.push(u); pos += u.length; };
+  const start = n => { offs[n] = pos; put(n+" 0 obj\n"); };
+  const N = jpgs.length;
+  put("%PDF-1.4\n");
+  start(1); put("<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+  start(2); put("<< /Type /Pages /Kids ["+jpgs.map((_,i)=>(3+3*i)+" 0 R").join(" ")+"] /Count "+N+" >>\nendobj\n");
+  jpgs.forEach((u,i)=>{
+    const bin = atob(u.split(",")[1]), bytes = new Uint8Array(bin.length);
+    for(let k=0;k<bin.length;k++) bytes[k] = bin.charCodeAt(k);
+    const pg = 3+3*i, ct = 4+3*i, im = 5+3*i, cs = "q 595 0 0 842 0 0 cm /Im0 Do Q";
+    start(pg); put("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /XObject << /Im0 "+im+" 0 R >> >> /Contents "+ct+" 0 R >>\nendobj\n");
+    start(ct); put("<< /Length "+cs.length+" >>\nstream\n"+cs+"\nendstream\nendobj\n");
+    start(im); put("<< /Type /XObject /Subtype /Image /Width "+w+" /Height "+h+" /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length "+bytes.length+" >>\nstream\n"); put(bytes); put("\nendstream\nendobj\n");
+  });
+  const total = 3+3*N, xr = pos;
+  put("xref\n0 "+total+"\n0000000000 65535 f \n");
+  for(let n=1;n<total;n++) put(String(offs[n]).padStart(10,"0")+" 00000 n \n");
+  put("trailer\n<< /Size "+total+" /Root 1 0 R >>\nstartxref\n"+xr+"\n%%EOF");
+  return new Blob(chunks, {type:"application/pdf"});
+}
+async function makePDF(){
+  toast("در حال ساخت برگه…");
+  const pages = (await makePages()).map(c=>c.toDataURL("image/jpeg",0.92));
+  const blob = buildPDF(pages, 1240, 1754);
+  const url = URL.createObjectURL(blob);
+  const fname = "measure-"+new Date().toISOString().slice(0,10)+".pdf";
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;z-index:20;background:var(--bg);overflow:auto;padding:12px";
+  ov.innerHTML = `<div class="bar"><button class="primary" id="dl">دانلود PDF</button><button id="sh">ارسال</button><button id="op">باز کردن PDF</button><button id="cl">بستن</button></div>`
+    + (hasWS ? '<div class="warn">داخل خود Claude دانلود و ارسال محدود است. برای کار کامل، فایل را مستقیم در Chrome باز کن (نسخه مستقل).</div>' : '')
+    + '<div class="meta" style="margin-bottom:8px">اگر دانلود کار نکرد، «باز کردن PDF» را بزن یا روی عکس هر صفحه نگه دار و ذخیره کن.</div>'
+    + pages.map(u=>`<img src="${u}" alt="صفحه" style="width:100%;max-width:720px;display:block;margin:0 auto 12px;background:#fff;border:1px solid var(--line)">`).join("");
+  document.body.appendChild(ov);
+  ov.querySelector("#cl").onclick = ()=> ov.remove();
+  ov.querySelector("#dl").onclick = ()=>{ try{ const a = document.createElement("a"); a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove(); toast("دانلود شد، پوشه Downloads را نگاه کن"); }catch(e){ toast("دانلود نشد"); } };
+  ov.querySelector("#op").onclick = ()=>{ const w = window.open(url, "_blank"); if(!w) toast("باز نشد"); };
+  ov.querySelector("#sh").onclick = async ()=>{ try{ const f = new File([blob], fname, {type:"application/pdf"}); if(navigator.canShare && navigator.canShare({files:[f]})) await navigator.share({files:[f], title:"برگه اندازه‌گیری"}); else toast("ارسال در این مرورگر ممکن نیست، دانلود کن"); }catch(e){ if(e && e.name!=="AbortError") toast("ارسال نشد"); } };
+}
+
+/* ---------- مسیریابی ---------- */
+function go(v){ view=v; window.scrollTo(0,0); if(v==="list") renderList(); else if(v==="project") renderProject(); else renderItem(); }
+loadAll().then(()=>go("list"));
+</script>
+<script>if("serviceWorker" in navigator && location.protocol.indexOf("http")===0){ navigator.serviceWorker.register("sw.js").catch(function(){}); }</script>
+</body>
+</html>
